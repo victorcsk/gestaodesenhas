@@ -164,3 +164,5 @@ export const useFirebaseSync = ({
 
   return { emit, isConnected: isConnected.current };
 };
+
+export default useFirebaseSync
