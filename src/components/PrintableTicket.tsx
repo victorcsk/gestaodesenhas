@@ -26,6 +26,21 @@ const PrintableTicket: React.FC<PrintableTicketProps> = ({ ticket, onPrint }) =>
           <div className="text-3xl font-bold text-blue-600 mb-2">
             {ticket.sector}-{ticket.number.toString().padStart(2, '0')}
           </div>
+          {ticket.clientName && (
+            <div className="text-lg font-semibold text-gray-800 mb-1">
+              Cliente: {ticket.clientName}
+            </div>
+          )}
+          {ticket.analystName && (
+            <div className="text-sm text-gray-600 mb-1">
+              Analista: {ticket.analystName}
+            </div>
+          )}
+          {ticket.serviceType && (
+            <div className="text-xs text-gray-600 mb-2">
+              Serviço: {ticket.serviceType}
+            </div>
+          )}
           <div className="text-sm text-gray-600">
             Setor: {ticket.sector}
           </div>

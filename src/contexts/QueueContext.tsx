@@ -6,6 +6,9 @@ export interface Ticket {
   id: string;
   number: number;
   sector: string;
+  clientName?: string;
+  serviceType?: string;
+  analystName?: string;
   timestamp: Date;
   status: 'waiting' | 'current' | 'completed';
 }
@@ -35,6 +38,7 @@ interface QueueContextType {
   resetQueue: (sector: string) => void;
   resetAllQueues: () => void;
   getTotalServed: (sector: string) => number;
+  generateTicketWithDetails: (sector: string, clientName?: string, serviceType?: string, analystName?: string) => Ticket;
 }
 
 const QueueContext = createContext<QueueContextType | undefined>(undefined);
@@ -101,11 +105,18 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const generateTicket = (sector: string): Ticket => {
+    return generateTicketWithDetails(sector);
+  };
+
+  const generateTicketWithDetails = (sector: string, clientName?: string, serviceType?: string, analystName?: string): Ticket => {
     const sectorKey = sector.toUpperCase() as keyof QueueState;
     const ticket: Ticket = {
       id: `${sector}-${Date.now()}`,
       number: queues[sectorKey].nextNumber,
       sector,
+      clientName,
+      serviceType,
+      analystName,
       timestamp: new Date(),
       status: 'waiting',
     };
@@ -235,6 +246,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       resetQueue,
       resetAllQueues,
       getTotalServed,
+      generateTicketWithDetails,
     }}>
       {children}
     </QueueContext.Provider>

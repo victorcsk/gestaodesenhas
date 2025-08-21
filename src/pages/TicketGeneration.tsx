@@ -1,29 +1,31 @@
 import React, { useState } from 'react';
 import { useQueue } from '../contexts/QueueContext';
-import { Ticket, Printer, Phone, HardDrive, ArrowLeft, Package } from 'lucide-react';
+import { useAnalyst } from '../contexts/AnalystContext';
+import { Ticket, Printer, Phone, Computer, ArrowLeft, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PrintableTicket from '../components/PrintableTicket';
+import ServiceModal from '../components/ServiceModal';
+import InfoModal from '../components/InfoModal';
 
 const TicketGeneration: React.FC = () => {
-  const { generateTicket } = useQueue();
+  const { generateTicketWithDetails } = useQueue();
+  const { analystName } = useAnalyst();
   const navigate = useNavigate();
   const [lastTicket, setLastTicket] = useState<Ticket | null>(null);
   const [showPrintable, setShowPrintable] = useState(false);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [selectedSector, setSelectedSector] = useState<string>('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalServices, setModalServices] = useState<string[]>([]);
 
   const sectors = [
-    { 
-      name: 'SUPORTE', 
-      label: 'Suporte a Sistemas', 
-      icon: HardDrive, 
+    {
+      name: 'SUPORTE_COMPUTADORES',
+      label: 'Suporte a Computadores',
+      icon: Computer,
       color: 'bg-blue-500 hover:bg-blue-600',
-      description: 'Manutenção em sistemas e aplicações como pacote Office e aplicações'
-    },
-    { 
-      name: 'HARDWARE', 
-      label: 'Setor Hardware', 
-      icon: Ticket, 
-      color: 'bg-orange-500 hover:bg-orange-600',
-      description: 'Manutenção física, troca de teclas e teclados, máquinas quebradas'
+      description: 'Suporte técnico em sistemas e hardware de computadores'
     },
     { 
       name: 'TELEFONIA', 
@@ -41,8 +43,62 @@ const TicketGeneration: React.FC = () => {
     },
   ];
 
-  const handleGenerateTicket = (sector: string) => {
-    const ticket = generateTicket(sector);
+  const handleSectorClick = (sectorName: string) => {
+    if (sectorName === 'SUPORTE_COMPUTADORES') {
+      setShowInfoModal(true);
+      return;
+    }
+
+    if (sectorName === 'TELEFONIA') {
+      setSelectedSector('TELEFONIA');
+      setModalTitle('Setor Telefonia');
+      setModalServices([
+        'Manutenção em aparelhos celulares',
+        'Troca de aparelho',
+        'Novos celulares'
+      ]);
+      setShowServiceModal(true);
+      return;
+    }
+
+    if (sectorName === 'ATIVOS') {
+      setSelectedSector('ATIVOS');
+      setModalTitle('Gestão de Ativos');
+      setModalServices([
+        'Troca de máquinas',
+        'Devoluções',
+        'Impressão de etiquetas',
+        'Next'
+      ]);
+      setShowServiceModal(true);
+      return;
+    }
+  };
+
+  const handleInfoModalConfirm = () => {
+    setShowInfoModal(false);
+    setSelectedSector('SUPORTE_COMPUTADORES');
+    setModalTitle('Suporte a Computadores');
+    setModalServices([
+      'Manutenção em sistemas e aplicações como pacote Office e outros',
+      'Manutenção física, troca de teclas e teclados, máquinas quebradas'
+    ]);
+    setShowServiceModal(true);
+  };
+
+  const handleServiceModalConfirm = (clientName: string, serviceType: string) => {
+    let actualSector = selectedSector;
+    
+    // Para suporte a computadores, determinar o setor real baseado no tipo de serviço
+    if (selectedSector === 'SUPORTE_COMPUTADORES') {
+      if (serviceType.includes('sistemas e aplicações')) {
+        actualSector = 'SUPORTE';
+      } else if (serviceType.includes('física, troca de teclas')) {
+        actualSector = 'HARDWARE';
+      }
+    }
+
+    const ticket = generateTicketWithDetails(actualSector, clientName, serviceType, analystName || undefined);
     setLastTicket(ticket);
     setShowPrintable(true);
   };
@@ -51,6 +107,14 @@ const TicketGeneration: React.FC = () => {
     window.print();
     setShowPrintable(false);
     setLastTicket(null);
+  };
+
+  const handleCloseModals = () => {
+    setShowServiceModal(false);
+    setShowInfoModal(false);
+    setSelectedSector('');
+    setModalTitle('');
+    setModalServices([]);
   };
 
   return (
@@ -74,6 +138,12 @@ const TicketGeneration: React.FC = () => {
           <p className="text-gray-600 text-lg">
             Selecione o setor para retirar sua senha de atendimento
           </p>
+          {analystName && (
+            <div className="mt-4 inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
+              <span className="text-sm">Analista responsável: </span>
+              <span className="font-semibold">{analystName}</span>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
@@ -82,7 +152,7 @@ const TicketGeneration: React.FC = () => {
             return (
               <button
                 key={sector.name}
-                onClick={() => handleGenerateTicket(sector.name)}
+                onClick={() => handleSectorClick(sector.name)}
                 className={`${sector.color} text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-50 text-left`}
               >
                 <div className="flex items-start space-x-4">
@@ -110,6 +180,24 @@ const TicketGeneration: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Info Modal */}
+      <InfoModal
+        isOpen={showInfoModal}
+        onClose={handleCloseModals}
+        onConfirm={handleInfoModalConfirm}
+        title="Informação Importante"
+        message="Caso não tenha chamado enquanto aguarda, favor abrir chamado antes de solicitar suporte através do telefone 0800 970 2300."
+      />
+
+      {/* Service Modal */}
+      <ServiceModal
+        isOpen={showServiceModal}
+        onClose={handleCloseModals}
+        onConfirm={handleServiceModalConfirm}
+        title={modalTitle}
+        services={modalServices}
+      />
 
       {/* Printable ticket component */}
       {showPrintable && lastTicket && (

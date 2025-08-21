@@ -1,28 +1,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Phone, Package, Users, RotateCcw, HardDrive, BarChart3 } from 'lucide-react';
+import { Monitor, Phone, Package, Users, RotateCcw, HardDrive, BarChart3, Computer } from 'lucide-react';
 import { useQueue } from '../contexts/QueueContext';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { useAnalyst } from '../contexts/AnalystContext';
 
 const MainLogin: React.FC = () => {
   const navigate = useNavigate();
   const { resetAllQueues } = useQueue();
   const { getTodayTotal } = useAnalytics();
+  const { analystName, clearAnalyst } = useAnalyst();
 
   const sectors = [
     { 
-      name: 'SUPORTE', 
-      label: 'Suporte a Sistemas', 
-      icon: Monitor, 
+      name: 'SUPORTE_COMPUTADORES', 
+      label: 'Suporte a Computadores', 
+      icon: Computer, 
       color: 'bg-blue-500 hover:bg-blue-600',
-      path: '/setor/suporte/painel'
-    },
-    { 
-      name: 'HARDWARE', 
-      label: 'Setor Hardware', 
-      icon: HardDrive, 
-      color: 'bg-orange-500 hover:bg-orange-600',
-      path: '/setor/hardware/painel'
+      path: '/setor/suporte/painel' // Mantém o path original para compatibilidade
     },
     { 
       name: 'TELEFONIA', 
@@ -63,6 +58,11 @@ const MainLogin: React.FC = () => {
     navigate('/analytics');
   };
 
+  const handleLogout = () => {
+    clearAnalyst();
+    window.location.reload();
+  };
+
   const todayTotal = getTodayTotal();
 
   return (
@@ -72,6 +72,17 @@ const MainLogin: React.FC = () => {
           <h1 className="text-5xl font-bold text-white mb-4">
             Sistema de Senhas
           </h1>
+          {analystName && (
+            <div className="mb-4 flex items-center justify-center space-x-4">
+              <div className="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg">
+                <span className="text-sm">Logado como: </span>
+                <span className="font-bold">{analystName}</span>
+              </div>
+              <button onClick={handleLogout} className="text-white hover:text-gray-300 text-sm underline">
+                Trocar usuário
+              </button>
+            </div>
+          )}
           <p className="text-xl text-gray-300">
             Selecione uma opção para continuar
           </p>
