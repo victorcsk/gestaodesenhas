@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBvOkBYAbFmxBzHxHQDetlzJOJ7rOiM5Hw",
-  authDomain: "sistema-senhas-demo.firebaseapp.com",
-  databaseURL: "https://sistema-senhas-demo-default-rtdb.firebaseio.com",
-  projectId: "sistema-senhas-demo",
-  storageBucket: "sistema-senhas-demo.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:0123456789abcdef"
+  apiKey: "AIzaSyDGpF8zTzuL5wYjMxJxKxJxKxJxKxJxKxJ",
+  authDomain: "sistema-senhas-realtime.firebaseapp.com",
+  databaseURL: "https://sistema-senhas-realtime-default-rtdb.firebaseio.com",
+  projectId: "sistema-senhas-realtime",
+  storageBucket: "sistema-senhas-realtime.appspot.com",
+  messagingSenderId: "987654321098",
+  appId: "1:987654321098:web:abcdef0123456789"
 };
 
 const app = initializeApp(firebaseConfig);
