@@ -25,13 +25,6 @@ const MainLogin: React.FC = () => {
       path: '/setor/hardware/painel'
     },
     { 
-      name: 'HARDWARE', 
-      label: 'Setor Hardware', 
-      icon: Package, 
-      color: 'bg-orange-500 hover:bg-orange-600',
-      path: '/setor/hardware/painel'
-    },
-    { 
       name: 'TELEFONIA', 
       label: 'Setor Telefonia', 
       icon: Phone, 
