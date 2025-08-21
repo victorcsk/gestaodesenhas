@@ -21,7 +21,7 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
   const { playNotificationSound } = useSoundNotification();
   
   // WebSocket para indicador de conexão
-  const { isConnected } = useWebSocket({
+  const { isConnected, isConnecting } = useWebSocket({
     onQueueUpdate: () => {},
     onTicketGenerated: () => {},
     onTicketCalled: () => {},
@@ -201,7 +201,7 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
       </div>
       
       {/* Connection Status */}
-      <ConnectionStatus isConnected={isConnected} />
+      <ConnectionStatus isConnected={isConnected} isConnecting={isConnecting} />
     </div>
   );
 };

@@ -17,7 +17,7 @@ const PublicPanel: React.FC = () => {
   const { playTicketCalledSound } = useSoundNotification();
   
   // WebSocket para indicador de conexão
-  const { isConnected } = useWebSocket({
+  const { isConnected, isConnecting } = useWebSocket({
     onQueueUpdate: () => {},
     onTicketGenerated: () => {},
     onTicketCalled: (data) => {
@@ -159,7 +159,7 @@ const PublicPanel: React.FC = () => {
       </div>
       
       {/* Connection Status */}
-      <ConnectionStatus isConnected={isConnected} />
+      <ConnectionStatus isConnected={isConnected} isConnecting={isConnecting} />
       
       {/* Sound Toggle */}
       <SoundToggle />
