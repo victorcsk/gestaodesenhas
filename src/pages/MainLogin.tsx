@@ -20,6 +20,13 @@ const MainLogin: React.FC = () => {
       path: '/setor/suporte/painel' // Mantém o path original para compatibilidade
     },
     { 
+      name: 'HARDWARE', 
+      label: 'Setor Hardware', 
+      icon: HardDrive, 
+      color: 'bg-orange-500 hover:bg-orange-600',
+      path: '/setor/hardware/painel'
+    },
+    { 
       name: 'TELEFONIA', 
       label: 'Setor Telefonia', 
       icon: Phone, 
