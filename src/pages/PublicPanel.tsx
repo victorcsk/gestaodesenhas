@@ -119,8 +119,16 @@ const PublicPanel: React.FC = () => {
                   {currentTicket ? (
                     <div>
                       <div className="text-3xl font-bold text-blue-600 mb-1">
-                        {sector.name}-{currentTicket.number.toString().padStart(2, '0')}
+                        {currentTicket.clientName || `Cliente ${currentTicket.number}`}
                       </div>
+                      <div className="text-lg text-gray-700 mb-1">
+                        Senha: {sector.name}-{currentTicket.number.toString().padStart(2, '0')}
+                      </div>
+                      {currentTicket.analystName && (
+                        <div className="text-sm text-blue-600 mb-1">
+                          Analista: {currentTicket.analystName}
+                        </div>
+                      )}
                       <div className="text-xs text-gray-500 flex items-center justify-center space-x-1">
                         <Clock size={12} />
                         <span>Chamada às {formatTime(currentTicket.timestamp)}</span>
@@ -128,7 +136,7 @@ const PublicPanel: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-gray-400">
-                      <div className="text-2xl mb-1">---</div>
+                      <div className="text-2xl mb-1">Nenhum cliente</div>
                       <div className="text-xs">Aguardando</div>
                     </div>
                   )}

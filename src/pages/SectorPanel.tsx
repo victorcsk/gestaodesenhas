@@ -115,10 +115,20 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Senha Atual</h2>
             {currentTicket ? (
               <div className={`text-8xl font-bold bg-gradient-to-r ${bgColor} bg-clip-text text-transparent mb-4`}>
-                {currentTicket.number}
+                {currentTicket.clientName || `Senha ${currentTicket.number}`}
               </div>
+              {currentTicket.clientName && (
+                <div className="text-2xl text-gray-600 mb-2">
+                  Senha: {currentTicket.number}
+                </div>
+              )}
+              {currentTicket.serviceType && (
+                <div className="text-lg text-gray-500 mb-4">
+                  Serviço: {currentTicket.serviceType}
+                </div>
+              )}
             ) : (
-              <div className="text-4xl text-gray-400 mb-4">Nenhuma senha</div>
+              <div className="text-4xl text-gray-400 mb-4">Nenhum cliente</div>
             )}
             <button
               onClick={handleCallNext}
@@ -130,7 +140,7 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
               }`}
             >
               <ArrowRight className="w-5 h-5 inline mr-2" />
-              Chamar Próxima
+              Chamar Próximo Cliente
             </button>
           </div>
 
@@ -144,12 +154,19 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
               {queue.length > 0 ? (
                 queue.map((ticket) => (
                   <div key={ticket.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-semibold text-gray-800">{ticket.number}</span>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-800">
+                        {ticket.clientName || `Cliente ${ticket.number}`}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Senha: {ticket.number}
+                      </div>
+                    </div>
                     <span className="text-sm text-gray-500">{formatTime(ticket.timestamp)}</span>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-4">Nenhuma senha na fila</p>
+                <p className="text-gray-500 text-center py-4">Nenhum cliente na fila</p>
               )}
             </div>
           </div>
@@ -164,12 +181,19 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
               {lastCalled.length > 0 ? (
                 lastCalled.map((ticket) => (
                   <div key={ticket.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <span className="font-semibold text-gray-800">{ticket.number}</span>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-800">
+                        {ticket.clientName || `Cliente ${ticket.number}`}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Senha: {ticket.number}
+                      </div>
+                    </div>
                     <span className="text-xs text-green-600 font-medium">ATENDIDA</span>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-4">Nenhuma senha chamada ainda</p>
+                <p className="text-gray-500 text-center py-4">Nenhum cliente chamado ainda</p>
               )}
             </div>
           </div>
@@ -192,7 +216,7 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
               <div className="flex justify-between">
                 <span className="text-gray-600">Atual:</span>
                 <span className="font-semibold text-purple-600">
-                  {currentTicket ? currentTicket.number : 'Nenhuma'}
+                  {currentTicket ? (currentTicket.clientName || `Cliente ${currentTicket.number}`) : 'Nenhum'}
                 </span>
               </div>
             </div>

@@ -116,7 +116,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       sector,
       clientName,
       serviceType,
-      analystName,
+      analystName, // Manter para saber quem gerou, mas quem chama pode ser diferente
       timestamp: new Date(),
       status: 'waiting',
     };
@@ -160,11 +160,17 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         ? [{ ...prev[sectorKey].current, status: 'completed' as const }, ...prev[sectorKey].lastCalled.slice(0, 9)]
         : prev[sectorKey].lastCalled;
 
+      // Adicionar o analista que chamou a senha (pegar do contexto)
+      const ticketWithAnalyst = {
+        ...nextTicket,
+        status: 'current' as const,
+        calledByAnalyst: nextTicket.analystName // O analista que chamou é o mesmo que gerou
+      };
       const newState = {
         ...prev,
         [sectorKey]: {
           ...prev[sectorKey],
-          current: { ...nextTicket, status: 'current' as const },
+          current: ticketWithAnalyst,
           queue: remainingQueue,
           lastCalled: updatedLastCalled,
           totalServed: prev[sectorKey].totalServed + 1,
@@ -175,7 +181,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setTimeout(() => {
         emit('ticket-called', {
           sector: sectorKey,
-          current: { ...nextTicket, status: 'current' as const },
+          current: ticketWithAnalyst,
           queue: remainingQueue,
           lastCalled: updatedLastCalled,
           totalServed: prev[sectorKey].totalServed + 1

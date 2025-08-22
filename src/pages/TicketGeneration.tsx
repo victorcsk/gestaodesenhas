@@ -98,16 +98,17 @@ const TicketGeneration: React.FC = () => {
       }
     }
 
-    const ticket = generateTicketWithDetails(actualSector, clientName, serviceType, analystName || undefined);
-    setLastTicket(ticket);
-    setShowPrintable(true);
+    const ticket = generateTicketWithDetails(actualSector, clientName, serviceType);
+    
+    // Mostrar confirmação em vez de imprimir
+    alert(`Senha gerada com sucesso!\n\nSetor: ${actualSector}\nNúmero: ${ticket.number}\nCliente: ${clientName}\n\nAcompanhe no painel público.`);
+    
+    // Voltar para tela principal após 2 segundos
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
   };
 
-  const handlePrint = () => {
-    window.print();
-    setShowPrintable(false);
-    setLastTicket(null);
-  };
 
   const handleCloseModals = () => {
     setShowServiceModal(false);
@@ -138,12 +139,6 @@ const TicketGeneration: React.FC = () => {
           <p className="text-gray-600 text-lg">
             Selecione o setor para retirar sua senha de atendimento
           </p>
-          {analystName && (
-            <div className="mt-4 inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
-              <span className="text-sm">Analista responsável: </span>
-              <span className="font-semibold">{analystName}</span>
-            </div>
-          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
@@ -172,10 +167,9 @@ const TicketGeneration: React.FC = () => {
         </div>
 
         <div className="mt-12 text-center">
-          <div className="flex items-center justify-center space-x-2 text-gray-500">
-            <Printer size={20} />
+          <div className="text-gray-500">
             <span className="text-sm">
-              A senha será impressa automaticamente após a geração
+              Sua senha aparecerá no painel público após a geração
             </span>
           </div>
         </div>
@@ -198,11 +192,6 @@ const TicketGeneration: React.FC = () => {
         title={modalTitle}
         services={modalServices}
       />
-
-      {/* Printable ticket component */}
-      {showPrintable && lastTicket && (
-        <PrintableTicket ticket={lastTicket} onPrint={handlePrint} />
-      )}
     </div>
   );
 };
