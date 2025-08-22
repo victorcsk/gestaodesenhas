@@ -82,7 +82,7 @@ const TicketGeneration: React.FC = () => {
     setShowServiceModal(true);
   };
 
-  const handleServiceModalConfirm = (clientName: string, serviceType: string) => {
+  const handleServiceModalConfirm = async (clientName: string, serviceType: string) => {
     let actualSector = selectedSector;
     
     // Para suporte a computadores, determinar o setor real baseado no tipo de serviço
@@ -94,15 +94,20 @@ const TicketGeneration: React.FC = () => {
       }
     }
 
-    const ticket = generateTicketWithDetails(actualSector, clientName, serviceType);
+    try {
+      const ticket = await generateTicketWithDetails(actualSector, clientName, serviceType);
     
-    // Mostrar confirmação em vez de imprimir
-    alert(`Senha gerada com sucesso!\n\nSetor: ${actualSector}\nNúmero: ${ticket.number}\nCliente: ${clientName}\n\nAcompanhe no painel público.`);
+      // Mostrar confirmação digital
+      alert(`Senha gerada com sucesso!\n\nSetor: ${actualSector}\nNúmero: ${ticket.number}\nCliente: ${clientName}\n\nAcompanhe no painel público.`);
     
-    // Voltar para tela principal após 2 segundos
-    setTimeout(() => {
-      navigate('/');
-    }, 2000);
+      // Voltar para tela principal após 2 segundos
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+    } catch (error) {
+      alert('Erro ao gerar senha. Tente novamente.');
+      console.error('Erro ao gerar senha:', error);
+    }
   };
 
 

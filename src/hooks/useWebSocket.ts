@@ -1,3 +1,4 @@
+// Mantido para compatibilidade - agora usa Firebase
 import { useFirebaseSync } from './useFirebaseSync';
 
 interface WebSocketHookProps {
@@ -8,7 +9,7 @@ interface WebSocketHookProps {
 }
 
 export const useWebSocket = (props: WebSocketHookProps) => {
-  // Usar Firebase para sincronização em tempo real
+  // Redirecionamento para Firebase
   const { emit, isConnected, isConnecting } = useFirebaseSync(props);
 
   return { 

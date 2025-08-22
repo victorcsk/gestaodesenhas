@@ -6,7 +6,7 @@ import { ArrowRight, Clock, Users, CheckCircle, LogOut, RotateCcw } from 'lucide
 import { formatTime } from '../utils/dateUtils';
 import { useAnalyst } from '../contexts/AnalystContext';
 import ConnectionStatus from '../components/ConnectionStatus';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useFirebaseSync } from '../hooks/useFirebaseSync';
 import { useSoundNotification } from '../hooks/useSoundNotification';
 
 const SectorPanel: React.FC = () => {
@@ -17,8 +17,8 @@ const SectorPanel: React.FC = () => {
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { playNotificationSound } = useSoundNotification();
   
-  // WebSocket para indicador de conexão
-  const { isConnected, isConnecting } = useWebSocket({
+  // Firebase para indicador de conexão
+  const { isConnected, isConnecting } = useFirebaseSync({
     onQueueUpdate: () => {},
     onTicketGenerated: () => {},
     onTicketCalled: () => {},
@@ -125,6 +125,11 @@ const SectorPanel: React.FC = () => {
                 {currentTicket.serviceType && (
                   <div className="text-lg text-gray-500 mb-4">
                     Serviço: {currentTicket.serviceType}
+                  </div>
+                )}
+                {currentTicket.calledByAnalyst && (
+                  <div className="text-sm text-blue-600 mb-4">
+                    Chamada por: {currentTicket.calledByAnalyst}
                   </div>
                 )}
               </>

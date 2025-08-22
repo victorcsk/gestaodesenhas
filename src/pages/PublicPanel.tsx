@@ -5,7 +5,7 @@ import { Clock, Users, Monitor, ArrowLeft, Package, HardDrive, Phone } from 'luc
 import { formatTime } from '../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import ConnectionStatus from '../components/ConnectionStatus';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useFirebaseSync } from '../hooks/useFirebaseSync';
 import { useSoundNotification } from '../hooks/useSoundNotification';
 import SoundToggle from '../components/SoundToggle';
 
@@ -16,8 +16,8 @@ const PublicPanel: React.FC = () => {
   const [lastAnnouncedTicket, setLastAnnouncedTicket] = React.useState<string | null>(null);
   const { playTicketCalledSound } = useSoundNotification();
   
-  // WebSocket para indicador de conexão
-  const { isConnected, isConnecting } = useWebSocket({
+  // Firebase para indicador de conexão
+  const { isConnected, isConnecting } = useFirebaseSync({
     onQueueUpdate: () => {},
     onTicketGenerated: () => {},
     onTicketCalled: (data) => {
@@ -123,14 +123,14 @@ const PublicPanel: React.FC = () => {
                       <div className="text-lg text-gray-700 mb-1">
                         Senha: {sector.name}-{currentTicket.number.toString().padStart(2, '0')}
                       </div>
-                      {currentTicket.analystName && (
+                      {currentTicket.calledByAnalyst && (
                         <div className="text-sm text-blue-600 mb-1">
-                          Analista: {currentTicket.analystName}
+                          Analista: {currentTicket.calledByAnalyst}
                         </div>
                       )}
                       <div className="text-xs text-gray-500 flex items-center justify-center space-x-1">
                         <Clock size={12} />
-                        <span>Chamada às {formatTime(currentTicket.timestamp)} por {currentTicket.calledByAnalyst || 'Analista'}</span>
+                        <span>Chamada às {formatTime(currentTicket.timestamp)}</span>
                       </div>
                     </div>
                   ) : (

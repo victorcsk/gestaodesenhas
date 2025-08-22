@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { useFirebaseSync } from '../hooks/useFirebaseSync';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useAnalyst } from '../contexts/AnalystContext';
+import { database } from '../config/firebase';
+import { ref, push, set, serverTimestamp } from 'firebase/database';
 
 export interface Ticket {
   id: string;
@@ -13,6 +15,7 @@ export interface Ticket {
   timestamp: Date;
   status: 'waiting' | 'current' | 'completed';
   calledByAnalyst?: string;
+  firebaseKey?: string;
 }
 
 export interface SectorQueue {
@@ -61,8 +64,8 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Analytics integration
   const analytics = useAnalytics ? useAnalytics() : null;
 
-  // WebSocket para comunicação em tempo real
-  const { emit } = useWebSocket({
+  // Firebase para comunicação em tempo real
+  const { emit, isConnected } = useFirebaseSync({
     onQueueUpdate: (data) => {
       setQueues(data.queues);
     },
@@ -109,11 +112,8 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
-  const generateTicket = (sector: string): Ticket => {
-    return generateTicketWithDetails(sector);
-  };
 
-  const generateTicketWithDetails = (sector: string, clientName?: string, serviceType?: string, analystName?: string): Ticket => {
+  const generateTicketWithDetails = async (sector: string, clientName?: string, serviceType?: string, analystName?: string): Promise<Ticket> => {
     const sectorKey = sector.toUpperCase() as keyof QueueState;
     const ticket: Ticket = {
       id: `${sector}-${Date.now()}`,
@@ -126,82 +126,67 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       status: 'waiting',
     };
 
-    setQueues(prev => ({
-      ...prev,
-      [sectorKey]: {
-        ...prev[sectorKey],
-        queue: [...prev[sectorKey].queue, ticket],
-        nextNumber: prev[sectorKey].nextNumber + 1,
+    try {
+      // Salvar no Firebase
+      const ticketsRef = ref(database, 'tickets');
+      const newTicketRef = push(ticketsRef);
+      await set(newTicketRef, {
+        id: ticket.id,
+        number: ticket.number,
+        sector: ticket.sector,
+        clientName: ticket.clientName,
+        serviceType: ticket.serviceType,
+        status: 'waiting',
+        timestamp: serverTimestamp(),
+        createdAt: new Date().toISOString()
+      });
+
+      ticket.firebaseKey = newTicketRef.key || '';
+
+      // Registrar no analytics
+      if (analytics) {
+        analytics.recordTicketGenerated(sector, ticket.number);
       }
-    }));
-
-    // Emitir evento para outros painéis
-    emit('ticket-generated', {
-      sector: sectorKey,
-      ticket,
-      nextNumber: queues[sectorKey].nextNumber + 1
-    });
-
-    // Registrar no analytics
-    if (analytics) {
-      analytics.recordTicketGenerated(sector, ticket.number);
+    } catch (error) {
+      console.error('Erro ao salvar ticket no Firebase:', error);
     }
 
     return ticket;
+  };
+
+  const generateTicket = (sector: string): Promise<Ticket> => {
+    return generateTicketWithDetails(sector);
   };
 
   const callNext = (sector: string) => {
     const sectorKey = sector.toUpperCase() as keyof QueueState;
     const currentAnalyst = analyst?.analystName || 'Analista';
     
-    setQueues(prev => {
-      const currentQueue = prev[sectorKey].queue;
-      if (currentQueue.length === 0) return prev;
+    const currentQueue = queues[sectorKey].queue;
+    if (currentQueue.length === 0) return;
 
-      const nextTicket = currentQueue[0];
-      const remainingQueue = currentQueue.slice(1);
+    const nextTicket = currentQueue[0];
+    const previousCurrent = queues[sectorKey].current;
 
-      // Add current ticket to lastCalled if exists
-      const updatedLastCalled = prev[sectorKey].current 
-        ? [{ ...prev[sectorKey].current, status: 'completed' as const }, ...prev[sectorKey].lastCalled.slice(0, 9)]
-        : prev[sectorKey].lastCalled;
-
-      // Adicionar o analista que chamou a senha (pegar do contexto)
-      const ticketWithAnalyst = {
+    // Emitir evento para Firebase
+    emit('ticket-called', {
+      sector: sectorKey,
+      current: {
         ...nextTicket,
-        status: 'current' as const,
-        calledByAnalyst: currentAnalyst // O analista que chamou a senha
-      };
-      const newState = {
-        ...prev,
-        [sectorKey]: {
-          ...prev[sectorKey],
-          current: ticketWithAnalyst,
-          queue: remainingQueue,
-          lastCalled: updatedLastCalled,
-          totalServed: prev[sectorKey].totalServed + 1,
-        }
-      };
-
-      // Emitir evento imediatamente com o novo estado
-      setTimeout(() => {
-        emit('ticket-called', {
-          sector: sectorKey,
-          current: ticketWithAnalyst,
-          queue: remainingQueue,
-          lastCalled: updatedLastCalled,
-          totalServed: prev[sectorKey].totalServed + 1
-        });
-        
-        // Registrar no analytics
-        if (analytics) {
-          const waitTime = Date.now() - nextTicket.timestamp.getTime();
-          analytics.recordTicketServed(sector, nextTicket.number, waitTime);
-        }
-      }, 100);
-
-      return newState;
+        calledByAnalyst: currentAnalyst,
+        status: 'current'
+      },
+      previousCurrent: previousCurrent ? {
+        ...previousCurrent,
+        firebaseKey: previousCurrent.firebaseKey
+      } : null
     });
+
+    // Registrar no analytics
+    if (analytics) {
+      const waitTime = Date.now() - nextTicket.timestamp.getTime();
+      analytics.recordTicketServed(sector, nextTicket.number, waitTime);
+    }
   };
 
   const getCurrentTicket = (sector: string): Ticket | null => {
@@ -219,26 +204,11 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return queues[sectorKey].lastCalled;
   };
   const resetQueue = (sector: string) => {
-    const sectorKey = sector.toUpperCase() as keyof QueueState;
-    setQueues(prev => ({
-      ...prev,
-      [sectorKey]: {
-        current: null,
-        queue: [],
-        lastCalled: [],
-        nextNumber: 1,
-        totalServed: 0,
-      }
-    }));
-
-    // Emitir evento para outros painéis
+    const sectorKey = sector.toUpperCase();
     emit('queue-reset', { sector: sectorKey });
   };
 
   const resetAllQueues = () => {
-    setQueues(initialState);
-    
-    // Emitir evento para outros painéis
     emit('queue-reset', { sector: 'ALL' });
   };
 
@@ -259,6 +229,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       resetAllQueues,
       getTotalServed,
       generateTicketWithDetails,
+      isConnected,
     }}>
       {children}
     </QueueContext.Provider>
