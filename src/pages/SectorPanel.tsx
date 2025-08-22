@@ -4,18 +4,15 @@ import { useQueue } from '../contexts/QueueContext';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Clock, Users, CheckCircle, LogOut, RotateCcw } from 'lucide-react';
 import { formatTime } from '../utils/dateUtils';
+import { useAnalyst } from '../contexts/AnalystContext';
 import ConnectionStatus from '../components/ConnectionStatus';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useSoundNotification } from '../hooks/useSoundNotification';
 
-interface SectorPanelProps {
-  loggedSector: string | null;
-  onLogout: () => void;
-}
-
-const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => {
+const SectorPanel: React.FC = () => {
   const { nome } = useParams<{ nome: string }>();
   const navigate = useNavigate();
+  const { analystName, clearAnalyst } = useAnalyst();
   const { getCurrentTicket, getQueueForSector, getLastCalledForSector, callNext, resetQueue, getTotalServed } = useQueue();
   const [refreshKey, setRefreshKey] = React.useState(0);
   const { playNotificationSound } = useSoundNotification();
@@ -28,10 +25,10 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
     onQueueReset: () => {}
   });
 
-  // Permitir acesso direto sem verificação de login
-  // if (!nome || !loggedSector || nome.toUpperCase() !== loggedSector) {
-  //   return <Navigate to={`/setor/${nome}`} replace />;
-  // }
+  // Verificar se analista está logado
+  if (!analystName) {
+    return <Navigate to="/login/analista" replace />;
+  }
 
   // Forçar re-render quando houver mudanças
   useEffect(() => {
@@ -57,8 +54,10 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
   };
 
   const handleLogoutClick = () => {
-    onLogout();
-    navigate('/');
+    if (window.confirm('Tem certeza que deseja encerrar sua sessão?')) {
+      clearAnalyst();
+      navigate('/');
+    }
   };
 
   const handleReset = () => {
@@ -85,7 +84,7 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
           <div>
             <h1 className="text-3xl font-bold">Painel do Setor {sector}</h1>
             <p className="opacity-90 mt-1">
-              Sistema de Gerenciamento de Senhas • {totalServed} pessoas atendidas hoje
+              Analista: {analystName} • {totalServed} pessoas atendidas hoje
             </p>
           </div>
           <div className="flex space-x-3">

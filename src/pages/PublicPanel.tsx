@@ -58,11 +58,10 @@ const PublicPanel: React.FC = () => {
         <div className="max-w-7xl mx-auto text-center">
           <div className="absolute top-4 right-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/painel')}
               className="flex items-center space-x-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-2 rounded-lg transition-colors text-sm"
             >
-              <ArrowLeft size={16} />
-              <span>Voltar</span>
+              <span>Painel de Senhas</span>
             </button>
           </div>
           <h1 className="text-4xl font-bold mb-2">Painel de Senhas</h1>
@@ -131,7 +130,7 @@ const PublicPanel: React.FC = () => {
                       )}
                       <div className="text-xs text-gray-500 flex items-center justify-center space-x-1">
                         <Clock size={12} />
-                        <span>Chamada às {formatTime(currentTicket.timestamp)}</span>
+                        <span>Chamada às {formatTime(currentTicket.timestamp)} por {currentTicket.calledByAnalyst || 'Analista'}</span>
                       </div>
                     </div>
                   ) : (
@@ -162,7 +161,13 @@ const PublicPanel: React.FC = () => {
       {/* Footer */}
       <div className="text-center text-white opacity-60 py-4 mt-6">
         <p className="text-sm">
-          Sistema de Senhas Interno • Atualização em tempo real
+          Sistema de Senhas Interno • Atualização em tempo real •{' '}
+          <button
+            onClick={() => navigate('/')}
+            className="underline hover:text-gray-300"
+          >
+            Voltar à seleção
+          </button>
         </p>
       </div>
       

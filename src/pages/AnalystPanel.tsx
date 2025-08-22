@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Monitor, Phone, Package, Users, RotateCcw, HardDrive, BarChart3, Computer } from 'lucide-react';
+import { Monitor, Phone, Package, Users, RotateCcw, HardDrive, BarChart3, Computer, LogOut } from 'lucide-react';
 import { useQueue } from '../contexts/QueueContext';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useAnalyst } from '../contexts/AnalystContext';
 
-const MainLogin: React.FC = () => {
+const AnalystPanel: React.FC = () => {
   const navigate = useNavigate();
   const { resetAllQueues } = useQueue();
   const { getTodayTotal } = useAnalytics();
@@ -13,32 +13,32 @@ const MainLogin: React.FC = () => {
 
   const sectors = [
     { 
-      name: 'SUPORTE_COMPUTADORES', 
+      name: 'SUPORTE', 
       label: 'Suporte a Computadores', 
       icon: Computer, 
       color: 'bg-blue-500 hover:bg-blue-600',
-      path: '/setor/suporte/painel' // Mantém o path original para compatibilidade
+      path: '/analista/setor/suporte/painel'
     },
     { 
       name: 'HARDWARE', 
       label: 'Setor Hardware', 
       icon: HardDrive, 
       color: 'bg-orange-500 hover:bg-orange-600',
-      path: '/setor/hardware/painel'
+      path: '/analista/setor/hardware/painel'
     },
     { 
       name: 'TELEFONIA', 
       label: 'Setor Telefonia', 
       icon: Phone, 
       color: 'bg-green-500 hover:bg-green-600',
-      path: '/setor/telefonia/painel'
+      path: '/analista/setor/telefonia/painel'
     },
     { 
       name: 'ATIVOS', 
       label: 'Gestão de Ativos', 
       icon: Package, 
       color: 'bg-purple-500 hover:bg-purple-600',
-      path: '/setor/ativos/painel'
+      path: '/analista/setor/ativos/painel'
     },
   ];
 
@@ -53,21 +53,15 @@ const MainLogin: React.FC = () => {
     }
   };
 
-  const handlePublicPanel = () => {
-    navigate('/painel');
-  };
-
-  const handleTicketGeneration = () => {
-    navigate('/retirada');
-  };
-
   const handleAnalytics = () => {
     navigate('/analytics');
   };
 
   const handleLogout = () => {
-    clearAnalyst();
-    window.location.reload();
+    if (window.confirm('Tem certeza que deseja encerrar sua sessão?')) {
+      clearAnalyst();
+      navigate('/');
+    }
   };
 
   const todayTotal = getTodayTotal();
@@ -77,7 +71,7 @@ const MainLogin: React.FC = () => {
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4">
-            Sistema de Senhas
+            Painel do Analista
           </h1>
           {analystName && (
             <div className="mb-4 flex items-center justify-center space-x-4">
@@ -86,12 +80,12 @@ const MainLogin: React.FC = () => {
                 <span className="font-bold">{analystName}</span>
               </div>
               <button onClick={handleLogout} className="text-white hover:text-gray-300 text-sm underline">
-                Trocar usuário
+                Encerrar sessão
               </button>
             </div>
           )}
           <p className="text-xl text-gray-300">
-            Selecione uma opção para continuar
+            Selecione um setor para atender
           </p>
           {todayTotal > 0 && (
             <div className="mt-4 inline-block bg-green-500 bg-opacity-20 text-green-300 px-4 py-2 rounded-lg">
@@ -102,7 +96,7 @@ const MainLogin: React.FC = () => {
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 mb-8">
           {/* Botões dos Setores */}
           {sectors.map((sector) => {
             const IconComponent = sector.icon;
@@ -123,29 +117,7 @@ const MainLogin: React.FC = () => {
           })}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          {/* Botão Retirada de Senhas */}
-          <button
-            onClick={handleTicketGeneration}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-yellow-300"
-          >
-            <div className="flex flex-col items-center space-y-3">
-              <Users size={32} />
-              <span className="font-semibold">Retirar Senha</span>
-            </div>
-          </button>
-
-          {/* Botão Painel Público */}
-          <button
-            onClick={handlePublicPanel}
-            className="bg-gray-600 hover:bg-gray-700 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-400"
-          >
-            <div className="flex flex-col items-center space-y-3">
-              <Monitor size={32} />
-              <span className="font-semibold">Painel Público</span>
-            </div>
-          </button>
-
+        <div className="grid gap-4 md:grid-cols-3">
           {/* Botão Analytics */}
           <button
             onClick={handleAnalytics}
@@ -167,6 +139,17 @@ const MainLogin: React.FC = () => {
               <span className="font-semibold">Reset Diário</span>
             </div>
           </button>
+
+          {/* Botão Logout */}
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white p-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-400"
+          >
+            <div className="flex flex-col items-center space-y-3">
+              <LogOut size={32} />
+              <span className="font-semibold">Encerrar Sessão</span>
+            </div>
+          </button>
         </div>
 
         <div className="text-center mt-8 text-gray-400">
@@ -179,4 +162,4 @@ const MainLogin: React.FC = () => {
   );
 };
 
-export default MainLogin;
+export default AnalystPanel;

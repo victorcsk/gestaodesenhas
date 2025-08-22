@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, LogIn } from 'lucide-react';
 import { useAnalyst } from '../contexts/AnalystContext';
 
-interface AnalystLoginProps {
-  onLogin: () => void;
-}
-
-const AnalystLogin: React.FC<AnalystLoginProps> = ({ onLogin }) => {
+const AnalystLogin: React.FC = () => {
   const [name, setName] = useState('');
   const { setAnalystName } = useAnalyst();
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
       setAnalystName(name.trim());
-      onLogin();
+      navigate('/analista/painel');
     }
   };
 
@@ -63,6 +61,16 @@ const AnalystLogin: React.FC<AnalystLoginProps> = ({ onLogin }) => {
 
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>Seu nome aparecerá nas senhas geradas</p>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-blue-600 hover:text-blue-800 text-sm underline"
+            >
+              Voltar à seleção de login
+            </button>
           </div>
         </div>
       </div>

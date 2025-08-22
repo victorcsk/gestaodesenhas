@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { useQueue } from '../contexts/QueueContext';
-import { useAnalyst } from '../contexts/AnalystContext';
 import { Ticket, Printer, Phone, Computer, ArrowLeft, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import PrintableTicket from '../components/PrintableTicket';
 import ServiceModal from '../components/ServiceModal';
 import InfoModal from '../components/InfoModal';
 
 const TicketGeneration: React.FC = () => {
   const { generateTicketWithDetails } = useQueue();
-  const { analystName } = useAnalyst();
   const navigate = useNavigate();
   const [lastTicket, setLastTicket] = useState<Ticket | null>(null);
-  const [showPrintable, setShowPrintable] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [selectedSector, setSelectedSector] = useState<string>('');
@@ -123,18 +119,17 @@ const TicketGeneration: React.FC = () => {
       {/* Botão Voltar */}
       <div className="absolute top-4 right-4">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/retirada')}
           className="flex items-center space-x-1 bg-white hover:bg-gray-50 px-3 py-2 rounded-lg shadow-md transition-colors text-sm text-gray-600"
         >
-          <ArrowLeft size={16} />
-          <span>Voltar</span>
+          <span>Totem de Retirada</span>
         </button>
       </div>
 
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Sistema de Senhas
+            Retirada de Senhas
           </h1>
           <p className="text-gray-600 text-lg">
             Selecione o setor para retirar sua senha de atendimento
@@ -169,8 +164,17 @@ const TicketGeneration: React.FC = () => {
         <div className="mt-12 text-center">
           <div className="text-gray-500">
             <span className="text-sm">
-              Sua senha aparecerá no painel público após a geração
+              Sua senha aparecerá no painel de senhas após ser chamada
             </span>
+          </div>
+          
+          <div className="mt-4">
+            <button
+              onClick={() => navigate('/')}
+              className="text-blue-600 hover:text-blue-800 text-sm underline"
+            >
+              Voltar à seleção de login
+            </button>
           </div>
         </div>
       </div>

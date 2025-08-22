@@ -3,53 +3,34 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueueProvider } from './contexts/QueueContext';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import { AnalystProvider, useAnalyst } from './contexts/AnalystContext';
+import LoginSelection from './pages/LoginSelection';
 import AnalystLogin from './pages/AnalystLogin';
-import MainLogin from './pages/MainLogin';
+import AnalystPanel from './pages/AnalystPanel';
 import TicketGeneration from './pages/TicketGeneration';
 import SectorPanel from './pages/SectorPanel';
 import PublicPanel from './pages/PublicPanel';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 
 const AppContent: React.FC = () => {
-  const { analystName } = useAnalyst();
-  const [loggedSector, setLoggedSector] = useState<string | null>(null);
-  const [showMainApp, setShowMainApp] = useState(false);
-
-  const handleLogin = (sector: string) => {
-    setLoggedSector(sector);
-  };
-
-  const handleLogout = () => {
-    setLoggedSector(null);
-  };
-
-  const handleAnalystLogin = () => {
-    setShowMainApp(true);
-  };
-
-  // Se não há analista logado, mostrar tela de login
-  if (!analystName || !showMainApp) {
-    return <AnalystLogin onLogin={handleAnalystLogin} />;
-  }
-
   return (
     <Router>
       <Routes>
-        {/* Rota principal - tela de login */}
-        <Route path="/" element={<MainLogin />} />
+        {/* Rota principal - seleção de tipo de login */}
+        <Route path="/" element={<LoginSelection />} />
+        
+        {/* Login de analista */}
+        <Route path="/login/analista" element={<AnalystLogin />} />
+        
+        {/* Painel do analista */}
+        <Route path="/analista/painel" element={<AnalystPanel />} />
         
         {/* Página de retirada de senhas */}
         <Route path="/retirada" element={<TicketGeneration />} />
         
-        {/* Painel do setor (acesso direto) */}
+        {/* Painel do setor para analistas */}
         <Route 
-          path="/setor/:nome/painel"
-          element={
-            <SectorPanel 
-              loggedSector={loggedSector} 
-              onLogout={handleLogout} 
-            />
-          } 
+          path="/analista/setor/:nome/painel"
+          element={<SectorPanel />} 
         />
         
         {/* Painel público */}

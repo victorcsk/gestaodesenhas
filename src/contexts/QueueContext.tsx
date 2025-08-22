@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { useAnalyst } from '../contexts/AnalystContext';
 
 export interface Ticket {
   id: string;
@@ -11,6 +12,7 @@ export interface Ticket {
   analystName?: string;
   timestamp: Date;
   status: 'waiting' | 'current' | 'completed';
+  calledByAnalyst?: string;
 }
 
 export interface SectorQueue {
@@ -52,6 +54,9 @@ const initialState: QueueState = {
 
 export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [queues, setQueues] = useState<QueueState>(initialState);
+
+  // Analyst context
+  const analyst = useAnalyst ? useAnalyst() : null;
 
   // Analytics integration
   const analytics = useAnalytics ? useAnalytics() : null;
@@ -147,6 +152,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const callNext = (sector: string) => {
     const sectorKey = sector.toUpperCase() as keyof QueueState;
+    const currentAnalyst = analyst?.analystName || 'Analista';
     
     setQueues(prev => {
       const currentQueue = prev[sectorKey].queue;
@@ -164,7 +170,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const ticketWithAnalyst = {
         ...nextTicket,
         status: 'current' as const,
-        calledByAnalyst: nextTicket.analystName // O analista que chamou é o mesmo que gerou
+        calledByAnalyst: currentAnalyst // O analista que chamou a senha
       };
       const newState = {
         ...prev,
