@@ -114,19 +114,21 @@ const SectorPanel: React.FC<SectorPanelProps> = ({ loggedSector, onLogout }) => 
           <div className="lg:col-span-3 bg-white rounded-lg shadow-lg p-8 text-center">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Senha Atual</h2>
             {currentTicket ? (
-              <div className={`text-8xl font-bold bg-gradient-to-r ${bgColor} bg-clip-text text-transparent mb-4`}>
-                {currentTicket.clientName || `Senha ${currentTicket.number}`}
-              </div>
-              {currentTicket.clientName && (
-                <div className="text-2xl text-gray-600 mb-2">
-                  Senha: {currentTicket.number}
+              <>
+                <div className={`text-8xl font-bold bg-gradient-to-r ${bgColor} bg-clip-text text-transparent mb-4`}>
+                  {currentTicket.clientName || `Senha ${currentTicket.number}`}
                 </div>
-              )}
-              {currentTicket.serviceType && (
-                <div className="text-lg text-gray-500 mb-4">
-                  Serviço: {currentTicket.serviceType}
-                </div>
-              )}
+                {currentTicket.clientName && (
+                  <div className="text-2xl text-gray-600 mb-2">
+                    Senha: {currentTicket.number}
+                  </div>
+                )}
+                {currentTicket.serviceType && (
+                  <div className="text-lg text-gray-500 mb-4">
+                    Serviço: {currentTicket.serviceType}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-4xl text-gray-400 mb-4">Nenhum cliente</div>
             )}
