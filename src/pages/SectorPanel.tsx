@@ -46,6 +46,7 @@ const SectorPanel: React.FC = () => {
   const totalServed = getTotalServed(sector);
 
   const handleCallNext = () => {
+    console.log('📞 Analista chamando próxima senha...');
     callNext(sector);
     // Tocar som de confirmação para o atendente
     setTimeout(() => {

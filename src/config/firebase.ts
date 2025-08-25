@@ -18,3 +18,4 @@ const app = initializeApp(firebaseConfig);
 
 // Inicializar Realtime Database
 export const database = getDatabase(app);
+export default app;

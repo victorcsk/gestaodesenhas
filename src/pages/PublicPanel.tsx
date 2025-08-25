@@ -18,9 +18,14 @@ const PublicPanel: React.FC = () => {
   
   // Firebase para indicador de conexão
   const { isConnected, isConnecting } = useFirebaseSync({
-    onQueueUpdate: () => {},
-    onTicketGenerated: () => {},
+    onQueueUpdate: (data) => {
+      console.log('📺 Painel público recebeu atualização:', data);
+    },
+    onTicketGenerated: (data) => {
+      console.log('📺 Painel público - nova senha gerada:', data);
+    },
     onTicketCalled: (data) => {
+      console.log('📺 Painel público - senha chamada:', data);
       // Verificar se é uma nova chamada para tocar o som
       if (data.current) {
         const ticketId = `${data.sector}-${data.current.number}-${data.current.timestamp}`;
@@ -32,7 +37,9 @@ const PublicPanel: React.FC = () => {
         }
       }
     },
-    onQueueReset: () => {}
+    onQueueReset: (data) => {
+      console.log('📺 Painel público - reset recebido:', data);
+    }
   });
 
   const sectors = [

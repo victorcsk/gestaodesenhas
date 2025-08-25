@@ -1,9 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useFirebaseSync } from '../hooks/useFirebaseSync';
-import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useAnalyst } from '../contexts/AnalystContext';
-import { database } from '../config/firebase';
-import { ref, push, set, serverTimestamp } from 'firebase/database';
 
 export interface Ticket {
   id: string;
@@ -57,19 +54,19 @@ const initialState: QueueState = {
 
 export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [queues, setQueues] = useState<QueueState>(initialState);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Analyst context
-  const analyst = useAnalyst ? useAnalyst() : null;
-
-  // Analytics integration
-  const analytics = useAnalytics ? useAnalytics() : null;
+  const { analystName } = useAnalyst();
 
   // Firebase para comunicação em tempo real
   const { emit, isConnected } = useFirebaseSync({
     onQueueUpdate: (data) => {
+      console.log('📥 Recebendo atualização das filas:', data);
       setQueues(data.queues);
     },
     onTicketGenerated: (data) => {
+      console.log('📥 Ticket gerado recebido:', data);
       setQueues(prev => ({
         ...prev,
         [data.sector]: {
@@ -80,6 +77,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }));
     },
     onTicketCalled: (data) => {
+      console.log('📥 Ticket chamado recebido:', data);
       setQueues(prev => {
         const sectorKey = data.sector as keyof QueueState;
         return {
@@ -95,6 +93,7 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       });
     },
     onQueueReset: (data) => {
+      console.log('📥 Reset recebido:', data);
       if (data.sector === 'ALL') {
         setQueues(initialState);
       } else {
@@ -112,8 +111,13 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   });
 
+  const generateTicket = async (sector: string): Promise<Ticket> => {
+    return generateTicketWithDetails(sector);
+  };
+
 
   const generateTicketWithDetails = async (sector: string, clientName?: string, serviceType?: string, analystName?: string): Promise<Ticket> => {
+    setIsLoading(true);
     const sectorKey = sector.toUpperCase() as keyof QueueState;
     const ticket: Ticket = {
       id: `${sector}-${Date.now()}`,
@@ -127,65 +131,64 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
 
     try {
-      // Salvar no Firebase
-      const ticketsRef = ref(database, 'tickets');
-      const newTicketRef = push(ticketsRef);
-      await set(newTicketRef, {
-        id: ticket.id,
-        number: ticket.number,
-        sector: ticket.sector,
-        clientName: ticket.clientName,
-        serviceType: ticket.serviceType,
-        status: 'waiting',
-        timestamp: serverTimestamp(),
-        createdAt: new Date().toISOString()
+      console.log('🎫 Gerando ticket:', ticket);
+      
+      // Emitir para Firebase
+      await emit('ticket-generated', {
+        sector: sectorKey,
+        ticket: ticket,
+        nextNumber: queues[sectorKey].nextNumber + 1
       });
 
-      ticket.firebaseKey = newTicketRef.key || '';
-
-      // Registrar no analytics
-      if (analytics) {
-        analytics.recordTicketGenerated(sector, ticket.number);
-      }
+      console.log('✅ Ticket enviado para Firebase');
+      
     } catch (error) {
-      console.error('Erro ao salvar ticket no Firebase:', error);
+      console.error('❌ Erro ao gerar ticket:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
 
     return ticket;
   };
 
-  const generateTicket = (sector: string): Promise<Ticket> => {
-    return generateTicketWithDetails(sector);
-  };
-
-  const callNext = (sector: string) => {
+  const callNext = async (sector: string) => {
+    setIsLoading(true);
     const sectorKey = sector.toUpperCase() as keyof QueueState;
-    const currentAnalyst = analyst?.analystName || 'Analista';
+    const currentAnalyst = analystName || 'Analista';
     
     const currentQueue = queues[sectorKey].queue;
-    if (currentQueue.length === 0) return;
+    if (currentQueue.length === 0) {
+      setIsLoading(false);
+      return;
+    }
 
     const nextTicket = currentQueue[0];
     const previousCurrent = queues[sectorKey].current;
 
-    // Emitir evento para Firebase
-    emit('ticket-called', {
-      sector: sectorKey,
-      current: {
-        ...nextTicket,
-        calledByAnalyst: currentAnalyst,
-        status: 'current'
-      },
-      previousCurrent: previousCurrent ? {
-        ...previousCurrent,
-        firebaseKey: previousCurrent.firebaseKey
-      } : null
-    });
+    try {
+      console.log('📞 Chamando próximo ticket:', nextTicket);
+      
+      // Emitir evento para Firebase
+      await emit('ticket-called', {
+        sector: sectorKey,
+        current: {
+          ...nextTicket,
+          calledByAnalyst: currentAnalyst,
+          status: 'current'
+        },
+        previousCurrent: previousCurrent ? {
+          ...previousCurrent,
+          firebaseKey: previousCurrent.firebaseKey
+        } : null
+      });
 
-    // Registrar no analytics
-    if (analytics) {
-      const waitTime = Date.now() - nextTicket.timestamp.getTime();
-      analytics.recordTicketServed(sector, nextTicket.number, waitTime);
+      console.log('✅ Chamada enviada para Firebase');
+      
+    } catch (error) {
+      console.error('❌ Erro ao chamar ticket:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -203,13 +206,21 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const sectorKey = sector.toUpperCase() as keyof QueueState;
     return queues[sectorKey].lastCalled;
   };
-  const resetQueue = (sector: string) => {
+  const resetQueue = async (sector: string) => {
     const sectorKey = sector.toUpperCase();
-    emit('queue-reset', { sector: sectorKey });
+    try {
+      await emit('queue-reset', { sector: sectorKey });
+    } catch (error) {
+      console.error('❌ Erro ao resetar fila:', error);
+    }
   };
 
-  const resetAllQueues = () => {
-    emit('queue-reset', { sector: 'ALL' });
+  const resetAllQueues = async () => {
+    try {
+      await emit('queue-reset', { sector: 'ALL' });
+    } catch (error) {
+      console.error('❌ Erro ao resetar todas as filas:', error);
+    }
   };
 
   const getTotalServed = (sector: string): number => {
@@ -229,6 +240,8 @@ export const QueueProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       resetAllQueues,
       getTotalServed,
       generateTicketWithDetails,
+      isConnected,
+      isLoading,
       isConnected,
     }}>
       {children}

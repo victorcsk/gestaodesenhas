@@ -95,7 +95,9 @@ const TicketGeneration: React.FC = () => {
     }
 
     try {
+      console.log('🎫 Gerando senha para:', { actualSector, clientName, serviceType });
       const ticket = await generateTicketWithDetails(actualSector, clientName, serviceType);
+      console.log('✅ Senha gerada:', ticket);
     
       // Mostrar confirmação digital
       alert(`Senha gerada com sucesso!\n\nSetor: ${actualSector}\nNúmero: ${ticket.number}\nCliente: ${clientName}\n\nAcompanhe no painel público.`);
@@ -105,8 +107,8 @@ const TicketGeneration: React.FC = () => {
         navigate('/');
       }, 2000);
     } catch (error) {
+      console.error('❌ Erro ao gerar senha:', error);
       alert('Erro ao gerar senha. Tente novamente.');
-      console.error('Erro ao gerar senha:', error);
     }
   };
 
